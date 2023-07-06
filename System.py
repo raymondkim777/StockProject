@@ -6,9 +6,10 @@ import spacy
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from math import log, sin, cos, pi, floor, ceil
+from math import log, sin, cos, pi, floor, ceil, sqrt
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from time import sleep
 
 
 class System:
@@ -231,6 +232,24 @@ class System:
         for stock in self.allStockList:
             if not self.stockData.analyzeStockData(stock):
                 return False
+
+        # find company relation bounds
+        query = f"{self.allStockList[0].companyName}, {self.allStockList[1].companyName}"
+        self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
+
+        global maxRelScore, minRelScore
+        maxRelScore = minRelScore = float(self.cur.fetchone()[0])
+
+        for i in range(len(self.allStockList)):
+            for j in range(len(self.allStockList)):
+                if i != j:
+                    com1 = self.allStockList[i].companyName
+                    com2 = self.allStockList[j].companyName
+                    query = f"{com1}, {com2}"
+                    self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
+                    result = float(self.cur.fetchone()[0])
+                    maxRelScore = max(maxRelScore, result)
+                    minRelScore = min(minRelScore, result)
 
         return True
 
@@ -801,12 +820,13 @@ class System:
     def __displaySpecificResults(self, main_idx: int, subFrame2Args: list, subFrame3Args: list) -> None:  # idx: base 1
         # updates subFrame2 and subFrame3
 
+        # subFrame 3
+        self.__updateSubFrame3(main_idx, subFrame3Args)
+
         # subFrame 2
         [subFrame2Canvas, parameters, stock_inc] = subFrame2Args
         self.__updateSubFrame2(subFrame2Canvas, parameters, stock_inc, main_idx)
 
-        # subFrame 3
-        self.__updateSubFrame3(main_idx, subFrame3Args)
 
     def __subFrame2CanvasInit(self, subFrame2Canvas: Canvas, parameters: list) -> None:
         [subdiv_num, color, canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad,
@@ -896,10 +916,6 @@ class System:
         query = f"{self.allStockList[0].companyName}, {self.allStockList[1].companyName}"
         self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
 
-        global maxRelScore, minRelScore
-        maxRelScore = minRelScore = float(self.cur.fetchone()[0])
-        maxInc = minInc = self.allStockList[0].stockChangeDataShort[0] / self.allStockList[0].stockDataShort[-1] * 100
-
         for i in range(len(self.allStockList)):
             for j in range(len(self.allStockList)):
                 if i != j:
@@ -908,11 +924,12 @@ class System:
                     query = f"{com1}, {com2}"
                     self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
                     result = float(self.cur.fetchone()[0])
-                    maxRelScore = max(maxRelScore, result)
-                    minRelScore = min(minRelScore, result)
 
                     if i == main_idx - 1:
                         stockRelData.append(result)
+
+        maxInc = minInc = self.allStockList[0].stockChangeDataShort[0] / self.allStockList[0].stockDataShort[-1] * 100
+        for i in range(len(self.allStockList)):
             maxInc = max(maxInc,
                          max(self.allStockList[i].stockChangeDataShort / self.allStockList[i].stockDataShort[-1] * 100))
             minInc = min(minInc,
@@ -939,61 +956,86 @@ class System:
         min_graph_width = (legend_xpad * 2 + legend_width + legend_labelpad) + box_xpad
         max_graph_width = canvas_width - axis_end_padding - box_xpad
 
-        for i in range(len(self.allStockList)):
-            if i != main_idx - 1:
-                idx = i - (i > main_idx - 1)
-                color_idx = int((stockRelData[idx] - minRelScore) / (maxRelScore - minRelScore) * subdiv_num)
-
-                change_data = self.allStockList[i].stockChangeDataShort / self.allStockList[i].stockDataShort[-1] * 100
-                left_xperc = min(change_data) / max(abs(maxInc), abs(minInc))
-                right_xperc = max(change_data) / max(abs(maxInc), abs(minInc))
-                cur_xperc = stock_inc[i] / max(abs(maxInc), abs(minInc))
-                positions.append([[left_xperc, right_xperc, cur_xperc], idx, color_idx])
-
-        # calculate final positions
-        for pos in positions:
-            left_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][0]
-            right_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][1]
-            cur_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][2]
-
-            y_pos = min_graph_height + (max_graph_height - min_graph_height - box_width) / (
-                    len(self.allStockList) - 2) * pos[1]
-            color_hex = color[pos[2]]
-            final_positions.append([[left_xpos, right_xpos, cur_xpos], y_pos, color_hex])
-
         # label main stock
         subFrame2Canvas.create_text((min_graph_width + max_graph_width) / 2, title_yoffset,
                                     text=f"{self.allStockList[main_idx - 1].companyName}", font=canvas_title_font)
 
-        # draw boxes
-        for i in range(len(final_positions)):  # [[left x_coor, right x_coor, cur x_coor], y_coor, color_hex]\
-            pos = final_positions[i]
+        # repeat for animation
+        animation_cnt = 40
+
+        for cnt in range(animation_cnt + 1):
+            for item in stockBoxes:
+                for item2 in item:
+                    subFrame2Canvas.delete(item2)
+            positions.clear()
+            final_positions.clear()
+            stockBoxes.clear()
+
+            total_perc = sqrt(1 - ((cnt - animation_cnt) ** 2 / (animation_cnt ** 2)))
+
+            # calculate position (perc)
+            for i in range(len(self.allStockList)):
+                if i != main_idx - 1:
+                    idx = i - (i > main_idx - 1)
+                    color_idx = int((stockRelData[idx] - minRelScore) / (maxRelScore - minRelScore) * subdiv_num)
+
+                    change_data = self.allStockList[i].stockChangeDataShort / self.allStockList[i].stockDataShort[-1] * 100
+                    left_xperc = min(change_data) / max(abs(maxInc), abs(minInc))
+                    right_xperc = max(change_data) / max(abs(maxInc), abs(minInc))
+                    cur_xperc = stock_inc[i] / max(abs(maxInc), abs(minInc))
+
+                    # animation
+                    perc_list = [left_xperc, right_xperc, cur_xperc]
+                    for i in range(len(perc_list)):
+                        perc_list[i] *= total_perc
+
+                    positions.append([perc_list, idx, color_idx])
+
+            # calculate final positions
+            for pos in positions:
+                left_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][0]
+                right_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][1]
+                cur_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][2]
+
+                y_pos = min_graph_height + (max_graph_height - min_graph_height - box_width) / (
+                        len(self.allStockList) - 2) * pos[1]
+                color_hex = color[pos[2]]
+                final_positions.append([[left_xpos, right_xpos, cur_xpos], y_pos, color_hex])
+
+            # draw boxes
+            for i in range(len(final_positions)):  # [[left x_coor, right x_coor, cur x_coor], y_coor, color_hex]
+                pos = final_positions[i]
+                stock_idx = i + (i >= main_idx - 1)
+                tag = f"box{stock_idx}"
+
+                center_oval = subFrame2Canvas.create_oval(
+                    pos[0][2] - box_length / 2, pos[1] - box_width / 2,
+                    pos[0][2] + box_length / 2, pos[1] + box_width / 2,
+                    width=0, fill=pos[2]
+                )
+                center_line = subFrame2Canvas.create_line(
+                    pos[0][0], pos[1],
+                    pos[0][1], pos[1],
+                    width=box_line_width, fill=pos[2], tags=tag
+                )
+                left_line = subFrame2Canvas.create_line(
+                    pos[0][0], pos[1] - box_width / 2,
+                    pos[0][0], pos[1] + box_width / 2,
+                    width=box_line_width, fill=pos[2]
+                )
+                right_line = subFrame2Canvas.create_line(
+                    pos[0][1], pos[1] - box_width / 2,
+                    pos[0][1], pos[1] + box_width / 2,
+                    width=box_line_width, fill=pos[2]
+                )
+                stockBoxes.append([center_oval, center_line, left_line, right_line])
+            root.update()
+            sleep(0.01)
+
+        # bind tk.ACTIVE with function to update display function
+        for i in range(len(final_positions)):  # [[left x_coor, right x_coor, cur x_coor], y_coor, color_hex]
             stock_idx = i + (i >= main_idx - 1)
             tag = f"box{stock_idx}"
-
-            center_oval = subFrame2Canvas.create_oval(
-                pos[0][2] - box_length / 2, pos[1] - box_width / 2,
-                pos[0][2] + box_length / 2, pos[1] + box_width / 2,
-                width=0, fill=pos[2]
-            )
-            center_line = subFrame2Canvas.create_line(
-                pos[0][0], pos[1],
-                pos[0][1], pos[1],
-                width=box_line_width, fill=pos[2], tags=tag
-            )
-            left_line = subFrame2Canvas.create_line(
-                pos[0][0], pos[1] - box_width / 2,
-                pos[0][0], pos[1] + box_width / 2,
-                width=box_line_width, fill=pos[2]
-            )
-            right_line = subFrame2Canvas.create_line(
-                pos[0][1], pos[1] - box_width / 2,
-                pos[0][1], pos[1] + box_width / 2,
-                width=box_line_width, fill=pos[2]
-            )
-            stockBoxes.append([center_oval, center_line, left_line, right_line])
-
-            # bind tk.ACTIVE with function to update display function
             param = stockRelData, box_line_width, box_width, box_length, box_ypad, box_xpad, min_graph_height, max_graph_height, min_graph_width, max_graph_width, highlight_position, highlight_height, canvas_axis_font
             subFrame2Canvas.tag_bind(tag, "<Enter>",
                                      lambda event, canvas=subFrame2Canvas, stock_idx=stock_idx, rel_idx=i, tag=tag, parameters=param:
