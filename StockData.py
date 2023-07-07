@@ -31,12 +31,13 @@ class StockData:
         for i in range(1, len(stock.stockDataLong)):
             stock.stockChangeDataLong.append(stock.stockDataLong[i] - stock.stockDataLong[i - 1])
 
-        print(f"Stock: {stock.companyName}")
-        print(stock.stockDataShort)
-        print(stock_df_short.head)
-
-        print(stock.stockDataLong)
-        print(stock_df_long.head)
+        print(
+            f"Stock: {stock.companyName}\n"
+            f"{stock_df_short.head}\n"
+            f"Short Data: {stock.stockDataShort}\n"
+            f"{stock_df_long.head}\n"
+            f"Long Data: {stock.stockDataLong}"
+        )
 
         return True
 
@@ -59,10 +60,5 @@ class StockData:
             stock.changeImportance[1] = False
         else:
             stock.changeImportance[1] = True
-
-        print(f"Stock: {stock.companyName}")
-        print(stock.stockChangeDataShort)
-        print(stock.stockChangeDataLong)
-        print(stock.changeImportance)
 
         return True

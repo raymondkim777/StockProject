@@ -55,20 +55,15 @@ class System:
 
         # runs new analysis
         stockLen = len(self.allStockList)
-        print('stockLen: ' + str(stockLen))
         for i in range(stockLen):
             self.__stockTermCalculate(self.allStockList[i])
-        # for stock in self.allStockList:
-        # print(f"Stock: {stock.companyName}, tf_idf: {stock.tf_idf}")
 
         for i in range(0, stockLen - 1):
             for j in range(i + 1, stockLen):
                 stock1 = self.allStockList[i]
                 stock2 = self.allStockList[j]
                 self.__stockRelCalculate(stock1, stock2)
-                # print(f"Score: {stock1.RelSentimentScore[stock2]}")
         plt.show()
-        # add data to DataBase
 
     def __stockTermCalculate(self, stock: Stock) -> bool:
         """
@@ -85,11 +80,9 @@ class System:
         self.cur.execute(f"select Word_Frequency from Articles where Stocks like \"%{stock.companyName}%\";")
         stock1_tf_list = self.cur.fetchall()
         for word_list in stock1_tf_list:
-            # print(f"Word list: {word_list}")
             if word_list == "":
                 continue
             for word_freq in word_list[0][1: -1].split("), ("):
-                # print(word_freq)
                 [word, freq] = word_freq.split(", ")
                 if word in stock.tf_idf:
                     stock.tf_idf[word] += int(freq)
@@ -98,15 +91,12 @@ class System:
 
         self.cur.execute(f"select count(*) from Articles;")
         doc_num = int(self.cur.fetchone()[0])
-        print(f"Length of stock tfidf: {len(stock.tf_idf)}")
         for word in stock.tf_idf:
-            # print(f"{word}: {stock.term_freq[word]}")
             self.cur.execute(
-                f"select count(*) from Articles where Stocks like \"%{stock.companyName}%\" and Word_Frequency like \"%{word}%\";")
+                f"select count(*) from Articles where Stocks like \"%{stock.companyName}%\" "
+                f"and Word_Frequency like \"%{word}%\";")
             word_idf = int(self.cur.fetchone()[0])
-            # print(f"{word}: {word_idf}")
             word_idf = log(doc_num / (1 + word_idf), 10)
-            # print(f"{word}: {word_idf}")
             stock.tf_idf[word] *= word_idf
 
         stock.tf_idf = dict(sorted(stock.tf_idf.items(), key=lambda x: x[1], reverse=True))
@@ -138,11 +128,8 @@ class System:
         if self.cur.fetchone()[0] == 0:
             self.__stockChooseKeywords(stock2)
 
-        # print(f"{stock1.companyName} words: {stock1.keywords}")
-        # print(f"{stock2.companyName} words: {stock2.keywords}")
-
-        stock1.keywordRel[stock2] = [[0 for b in range(len(stock2.keywords))] for a in range(len(stock1.keywords))]
-        stock2.keywordRel[stock1] = [[0 for b in range(len(stock1.keywords))] for a in range(len(stock2.keywords))]
+        stock1.keywordRel[stock2] = [[0 for _ in range(len(stock2.keywords))] for _ in range(len(stock1.keywords))]
+        stock2.keywordRel[stock1] = [[0 for _ in range(len(stock1.keywords))] for _ in range(len(stock2.keywords))]
 
         com1 = stock1.companyName + ", " + stock2.companyName
         com2 = stock2.companyName + ", " + stock1.companyName
@@ -150,8 +137,8 @@ class System:
         self.cur.execute(f"insert into Relations values (\'{com2}\', null, null)")
         self.conn.commit()
 
-        relations1 = [[0.0 for j in range(self.keyword_cnt)] for i in range(self.keyword_cnt)]
-        relations2 = [[0.0 for j in range(self.keyword_cnt)] for i in range(self.keyword_cnt)]
+        relations1 = [[0.0 for _ in range(self.keyword_cnt)] for _ in range(self.keyword_cnt)]
+        relations2 = [[0.0 for _ in range(self.keyword_cnt)] for _ in range(self.keyword_cnt)]
 
         relScore = 0
         for i in range(len(stock1.keywords)):
@@ -161,7 +148,6 @@ class System:
 
                 tokens = self.nlp(f"{word1} {word2}")
                 curScore = tokens[0].similarity(tokens[1])
-                # print(f"{word1}, {word2}: {curScore}")
 
                 stock1.keywordRel[stock2][i][j] = curScore
                 stock2.keywordRel[stock1][j][i] = curScore
@@ -184,9 +170,11 @@ class System:
                 insert2 += str(relations2[i][j]) + ", "
 
         self.cur.execute(
-            f"update Relations set Relations = \'{insert1[:-2]}\' , Final_value = \'{relScore}\' where Companies = \'{com1}\'")
+            f"update Relations set Relations = \'{insert1[:-2]}\' , "
+            f"Final_value = \'{relScore}\' where Companies = \'{com1}\'")
         self.cur.execute(
-            f"update Relations set Relations = \'{insert2[:-2]}\' , Final_value = \'{relScore}\' where Companies = \'{com2}\'")
+            f"update Relations set Relations = \'{insert2[:-2]}\' , "
+            f"Final_value = \'{relScore}\' where Companies = \'{com2}\'")
         self.conn.commit()
 
         return True
@@ -253,19 +241,6 @@ class System:
 
         return True
 
-    def showCompanyRels(self):
-        for stock in self.allStockList:
-            query = f"select Companies, Final_Value from Relations where Companies like \"{stock.companyName}%\" order by Final_Value"
-            self.cur.execute(query)
-            result = self.cur.fetchall()
-            for i in range(len(result)):
-                result[i] = list(result[i])
-                result[i][1] = float(result[i][1])
-            result.sort(key=lambda x: x[1])
-
-            for res in result:
-                print(res)
-
     def runStockGUI(self) -> None:
         global root
 
@@ -304,12 +279,12 @@ class System:
         canvas_row_height = 40
         frame1bt_height = 60
 
-        subFrame1CanvasFrame = Frame(subFrame1, height=gui_height - frame1bt_height, width=frame_widths[0] - 20,
-                                     bg='orange')
+        subFrame1CanvasFrame = Frame(
+            subFrame1, height=gui_height - frame1bt_height, width=frame_widths[0] - 20, bg='orange')
         subFrame1CanvasFrame.grid(row=0, column=0)
 
-        subFrame1Canvas = Canvas(subFrame1CanvasFrame, height=gui_height - frame1bt_height, width=frame_widths[0] - 20,
-                                 bg='white')
+        subFrame1Canvas = Canvas(
+            subFrame1CanvasFrame, height=gui_height - frame1bt_height, width=frame_widths[0] - 20, bg='white')
         subFrame1Canvas.grid(row=0, column=0)
 
         canvasScrollbar = Scrollbar(subFrame1CanvasFrame, orient=VERTICAL, command=subFrame1Canvas.yview)
@@ -345,8 +320,8 @@ class System:
                                         fill=stockColor, font=default_font)
 
             radio = Radiobutton(root, variable=mainStockVar, value=i + 1, width=0, bg='white')
-            subFrame1Canvas.create_window(canvas_col_x[3], canvas_head_height * 1.5 + i * canvas_row_height,
-                                          anchor=CENTER, window=radio)
+            subFrame1Canvas.create_window(
+                canvas_col_x[3], canvas_head_height * 1.5 + i * canvas_row_height, anchor=CENTER, window=radio)
 
         # mainStockVar.set(1)
         subFrame1Canvas.configure(scrollregion=subFrame1Canvas.bbox("all"))
@@ -355,27 +330,25 @@ class System:
         subFrame1BtFrame = Frame(subFrame1, height=frame1bt_height, width=frame_widths[0], bg='white')
         subFrame1BtFrame.grid(row=1, column=0)
 
-        showAllRelBt = Button(subFrame1BtFrame, text="Show All Relations", padx=2, pady=2, width=20,
-                              command=self.__displayResults)
+        showAllRelBt = Button(
+            subFrame1BtFrame, text="Show All Relations", padx=2, pady=2, width=20, command=self.__displayResults)
         showAllRelBt.place(relx=0.25, rely=0.5, anchor=CENTER)
 
-        showSpecAnBt = Button(subFrame1BtFrame, text="Show Focus Details", padx=2, pady=2, width=20,
-                              command=lambda: self.__displaySpecificResults(mainStockVar.get(),
-                                                                            [subFrame2Canvas,
-                                                                             [subdiv_num, color, canvas_title_font,
-                                                                              canvas_axis_font, canvas_font,
-                                                                              title_yoffset, legend_width, legend_xpad,
-                                                                              legend_ypad, legend_labelpad,
-                                                                              axis_end_padding, axis_side_padding,
-                                                                              x_label_xoffset, x_label_yoffset,
-                                                                              y_label_xoffset, highlight_position, highlight_height,
-                                                                              y_axis_offset, graph_top_start, graph_bottom_padding, highlight_width],
-                                                                             stock_inc],
-                                                                            [priceLabel, subFrame3Canvas1,
-                                                                             subFrame3Canvas2, trendShort,
-                                                                             changeImpShort, predictShort, relatedShort,
-                                                                             trendLong, changeImpLong, predictLong, relatedLong]))
-
+        showSpecAnBt = Button(
+            subFrame1BtFrame, text="Show Focus Details", padx=2, pady=2, width=20,
+            command=lambda: self.__displaySpecificResults(
+                mainStockVar.get(), [
+                    subFrame2Canvas, [
+                        canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad,
+                        legend_ypad, legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset,
+                        x_label_yoffset, y_label_xoffset, highlight_position, highlight_height, y_axis_offset,
+                        graph_top_start, graph_bottom_padding, highlight_width], stock_inc
+                ], [
+                    priceLabel, subFrame3Canvas1, subFrame3Canvas2, trendShort, changeImpShort, predictShort,
+                    relatedShort, trendLong, changeImpLong, predictLong, relatedLong
+                ]
+            )
+        )
         showSpecAnBt.place(relx=0.75, rely=0.5, anchor=CENTER)
 
         # subframe2 contents
@@ -407,6 +380,7 @@ class System:
         highlight_width = 100
 
         # colorplot
+        global subdiv_num, color
         subdiv_num = 255
         rgb_s = [0, 0, 0]
         rgb_e = [0, 255, 255]
@@ -419,12 +393,14 @@ class System:
         subFrame2Canvas = Canvas(subFrame2, height=gui_height, width=frame_widths[1], bg='#E2E2E2')
         subFrame2Canvas.grid(row=0, column=0)
         subFrame2Canvas.update()
-        self.__subFrame2CanvasInit(subFrame2Canvas,
-                                   [subdiv_num, color, canvas_title_font, canvas_axis_font, canvas_font, title_yoffset,
-                                    legend_width, legend_xpad, legend_ypad, legend_labelpad, axis_end_padding,
-                                    axis_side_padding, x_label_xoffset, x_label_yoffset, y_label_xoffset,
-                                    highlight_position, highlight_height, y_axis_offset,
-                                    graph_top_start, graph_bottom_padding, highlight_width])
+        self.__subFrame2CanvasInit(
+            subFrame2Canvas, [
+                canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad, legend_ypad,
+                legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset, x_label_yoffset, y_label_xoffset,
+                highlight_position, highlight_height, y_axis_offset, graph_top_start, graph_bottom_padding,
+                highlight_width
+            ]
+        )
 
         # subframe 3 contents
 
@@ -447,46 +423,50 @@ class System:
         priceLabel = Label(subFrame3, text=f"Current Price:", font=default_font, pady=price_padding)
         priceLabel.grid(row=0, column=0, sticky=W)
 
-        subFrame3Canvas1 = Canvas(subFrame3, height=canvas_height, width=canvas_width, bg='#E2E2E2', relief=canvas_bd_type)
+        subFrame3Canvas1 = Canvas(
+            subFrame3, height=canvas_height, width=canvas_width, bg='#E2E2E2', relief=canvas_bd_type)
         subFrame3Canvas1.grid(row=1, column=0)
 
         subFrame3TextFrame1 = Frame(subFrame3, height=text_height1 + text_height2, width=frame_widths[2] - side_padding)
         subFrame3TextFrame1.grid(row=2, column=0)
         subFrame3TextFrame1.grid_propagate(False)
 
-        subFrame3TextFrame1Center = Frame(subFrame3TextFrame1, height=text_height1 + text_height2, width=frame_widths[2] - side_padding)
+        subFrame3TextFrame1Center = Frame(
+            subFrame3TextFrame1, height=text_height1 + text_height2, width=frame_widths[2] - side_padding)
         subFrame3TextFrame1Center.place(relx=0, rely=0.5, anchor=W)
 
-        subFrame3Canvas2 = Canvas(subFrame3, height=canvas_height, width=canvas_width, bg='#E2E2E2', relief=canvas_bd_type)
+        subFrame3Canvas2 = Canvas(
+            subFrame3, height=canvas_height, width=canvas_width, bg='#E2E2E2', relief=canvas_bd_type)
         subFrame3Canvas2.grid(row=4, column=0)
 
         subFrame3TextFrame2 = Frame(subFrame3, height=text_height1 + text_height2, width=frame_widths[2] - side_padding)
         subFrame3TextFrame2.grid(row=5, column=0)
         subFrame3TextFrame2.grid_propagate(False)
 
-        subFrame3TextFrame2Center = Frame(subFrame3TextFrame2, height=text_height1 + text_height2, width=frame_widths[2] - side_padding)
+        subFrame3TextFrame2Center = Frame(
+            subFrame3TextFrame2, height=text_height1 + text_height2, width=frame_widths[2] - side_padding)
         subFrame3TextFrame2Center.place(relx=0, rely=0.5, anchor=W)
 
         # label text
-        Label(subFrame3TextFrame1Center, text=f"Short-Term ({self.timePeriod[0][0]}, {self.timePeriod[0][1]}): ",
-              font=default_font).grid(row=0, column=0, sticky=W, padx=text_padding)
-        Label(subFrame3TextFrame1Center, text="Change Importance: ", font=default_font).grid(row=1, column=0, sticky=W,
-                                                                                             padx=text_padding)
-        Label(subFrame3TextFrame1Center, text="Short-Term Prediction: ", font=default_font).grid(row=2, column=0,
-                                                                                                 sticky=W,
-                                                                                                 padx=text_padding)
-        Label(subFrame3TextFrame1Center, text="Mainly Related Stocks: ", font=default_font).grid(row=3, column=0, sticky=W,
-                                                                                            padx=text_padding)
+        Label(
+            subFrame3TextFrame1Center, text=f"Short-Term ({self.timePeriod[0][0]}, {self.timePeriod[0][1]}): ",
+            font=default_font).grid(row=0, column=0, sticky=W, padx=text_padding)
+        Label(subFrame3TextFrame1Center, text="Change Importance: ", font=default_font).grid(
+            row=1, column=0, sticky=W, padx=text_padding)
+        Label(subFrame3TextFrame1Center, text="Short-Term Prediction: ", font=default_font).grid(
+            row=2, column=0, sticky=W, padx=text_padding)
+        Label(subFrame3TextFrame1Center, text="Mainly Related Stocks: ", font=default_font).grid(
+            row=3, column=0, sticky=W, padx=text_padding)
 
-        Label(subFrame3TextFrame2Center, text=f"Long-Term ({self.timePeriod[1][0]}, {self.timePeriod[1][1]}): ",
-              font=default_font).grid(row=0, column=0, sticky=W, padx=text_padding)
-        Label(subFrame3TextFrame2Center, text="Change Importance: ", font=default_font).grid(row=1, column=0, sticky=W,
-                                                                                             padx=text_padding)
-        Label(subFrame3TextFrame2Center, text="Long-Term Prediction: ", font=default_font).grid(row=2, column=0,
-                                                                                                sticky=W,
-                                                                                                padx=text_padding)
-        Label(subFrame3TextFrame2Center, text="Mainly Related Stocks: ", font=default_font).grid(row=3, column=0, sticky=W,
-                                                                                            padx=text_padding)
+        Label(
+            subFrame3TextFrame2Center, text=f"Long-Term ({self.timePeriod[1][0]}, {self.timePeriod[1][1]}): ",
+            font=default_font).grid(row=0, column=0, sticky=W, padx=text_padding)
+        Label(subFrame3TextFrame2Center, text="Change Importance: ", font=default_font).grid(
+            row=1, column=0, sticky=W, padx=text_padding)
+        Label(subFrame3TextFrame2Center, text="Long-Term Prediction: ", font=default_font).grid(
+            row=2, column=0, sticky=W, padx=text_padding)
+        Label(subFrame3TextFrame2Center, text="Mainly Related Stocks: ", font=default_font).grid(
+            row=3, column=0, sticky=W, padx=text_padding)
 
         # text widgets
         trendShort = Label(subFrame3TextFrame1Center, text="", font=default_font)
@@ -541,7 +521,6 @@ class System:
                 query = f"{com1}, {com2}"
                 self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
                 stockRelData.append(float(self.cur.fetchone()[0]))
-                # stockRelData.append(self.allStockList[i].RelSentimentScore[self.allStockList[j]])
 
         # parameters
         canvas_width = 1000
@@ -556,7 +535,7 @@ class System:
         oval_height = 40
         oval_line_width = 2
         line_width = 1
-        oval_color = "#C4E1FE"  # E9C8D0
+        oval_color = "#C4E1FE"
 
         # elements
         relResultWindow = Toplevel()
@@ -592,11 +571,11 @@ class System:
         option2Drop.config(width=20)
         option2Drop.grid(row=0, column=1)
 
-        resultButton = Button(buttonFrame, text="Display Correlation Graph", width=20,
-                              command=lambda: self.__updateResultToplevel(
-                                  relResultWindow, com1, com2,
-                                  [positions, boldItems, oval_width, oval_height, oval_color, displayCanvas, fig,
-                                   resultCanvas]))
+        resultButton = Button(
+            buttonFrame, text="Display Correlation Graph", width=20, command=lambda: self.__updateResultToplevel(
+                relResultWindow, com1, com2, [
+                    positions, boldItems, oval_width, oval_height, oval_color, displayCanvas, fig, resultCanvas
+                ]))
         resultButton.grid(row=0, column=2)
 
         # items
@@ -604,8 +583,6 @@ class System:
         colorLines = []
         boldItems = []
         stockOvals = []
-        # stockButtons = []
-        # stockVars = []
 
         center_xy = [canvas_width // 2, canvas_height // 2]
         for i in range(len(self.allStockList)):
@@ -624,25 +601,18 @@ class System:
 
         # draw ovals
         for pos in positions:
-            stockOvals.append(displayCanvas.create_oval(pos[0] - oval_width // 2,
-                                                        pos[1] - oval_height // 2,
-                                                        pos[0] + oval_width // 2,
-                                                        pos[1] + oval_height // 2,
-                                                        width=oval_line_width, fill=oval_color))
+            stockOvals.append(
+                displayCanvas.create_oval(
+                    pos[0] - oval_width // 2,
+                    pos[1] - oval_height // 2,
+                    pos[0] + oval_width // 2,
+                    pos[1] + oval_height // 2,
+                    width=oval_line_width, fill=oval_color)
+            )
 
         # draw stock labels
         for i in range(len(self.allStockList)):
             displayCanvas.create_text(positions[i][0], positions[i][1], text=self.allStockList[i].companyName[:2])
-
-        '''
-        # place stock buttons
-        for i in range(len(self.allStockList)):
-            stockVars.append(IntVar())
-            stockButtons.append(
-                Checkbutton(displayCanvas, text=self.allStockList[i].companyName[:2], variable=stockVars[i],
-                            onvalue=1, offvalue=0, bg="#E9C8D0")
-                .place(x=positions[i][0], y=positions[i][1], anchor=CENTER)
-            )'''
 
         # result half
         resultFrame = Frame(allFrame, padx=25, pady=5)
@@ -657,35 +627,10 @@ class System:
         relResultWindow.mainloop()
 
     def __drawColorLine(self, x1, y1, x2, y2, canvas, line_width, dataValue) -> list:
-        stockRelData = []
-        for i in range(0, len(self.allStockList) - 1):
-            for j in range(i + 1, len(self.allStockList)):
-                com1 = self.allStockList[i].companyName
-                com2 = self.allStockList[j].companyName
-                query = f"{com1}, {com2}"
-                self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
-                stockRelData.append(float(self.cur.fetchone()[0]))
+        color_idx = int((dataValue - minRelScore) / (maxRelScore - minRelScore) * subdiv_num)
+        return canvas.create_line(x1, y1, x2, y2, fill=color[color_idx], width=line_width)
 
-        # draw color lines
-        subdiv_num = 255
-        rgb_s = [0, 0, 0]
-        rgb_e = [0, 255, 255]
-        inc = [(v1 - v2) / subdiv_num for v1, v2 in zip(rgb_e, rgb_s)]
-        color = [
-            f"#{int(rgb_s[0] + (i * inc[0])):02x}{int(rgb_s[1] + (i * inc[1])):02x}{int(rgb_s[2] + (i * inc[2])):02x}"
-            for i in range(256)]
-
-        maxScore = max(stockRelData)
-        minScore = min(stockRelData)
-
-        color_idx = int((dataValue - minScore) / (maxScore - minScore) * subdiv_num)
-        return canvas.create_line(
-            x1, y1,
-            x2, y2,
-            fill=color[color_idx], width=line_width
-        )
-
-    def __updateResultToplevel(self, toplevel: Toplevel, com1: StringVar, com2: StringVar, given_items: list) -> None:  # self, stockVars: list, fig: plt.figure, resultCanvas: FigureCanvasTkAgg
+    def __updateResultToplevel(self, toplevel: Toplevel, com1: StringVar, com2: StringVar, given_items: list) -> None:
         """
         Sub method for self.__displayResults method.
         Updates Matplotlib Canvas Figure to display keyword relations for selected companies in 3d graph form.
@@ -700,6 +645,7 @@ class System:
         # refresh everything
         for item in boldItems:
             displayCanvas.delete(item)
+        boldItems.clear()
         fig.clf()
 
         # variable lists
@@ -711,111 +657,130 @@ class System:
                 selectStocks.append(self.allStockList[i])
                 selectIdx.append(i)
 
-        if len(selectStocks) == 2:
-            # print keywords
-            stock1 = selectStocks[0]
-            stock2 = selectStocks[1]
+        if len(selectStocks) != 2:
+            return
 
-            self.cur.execute(f"select * from Companies where Name = \'{stock1.companyName}\'")
-            result = self.cur.fetchone()
-            print(f"{stock1.companyName}: {result[1]}")
+        # print keywords
+        stock1 = selectStocks[0]
+        stock2 = selectStocks[1]
 
-            self.cur.execute(f"select * from Companies where Name = \'{stock2.companyName}\'")
-            result = self.cur.fetchone()
-            print(f"{stock2.companyName}: {result[1]}")
+        self.cur.execute(f"select * from Companies where Name = \'{stock1.companyName}\'")
+        result = self.cur.fetchone()
+        print(f"{stock1.companyName}: {result[1]}")
 
-            # update right figure plot
-            ax = fig.add_subplot(1, 1, 1, projection='3d')
-            ax.clear()
-            ax.set_xticks([i for i in range(self.keyword_cnt + 1)])
-            ax.set_yticks([i for i in range(self.keyword_cnt + 1)])
-            ax.set_zticks([0, 0.2, 0.4, 0.6, 0.8, 1])
-            ax.set_zlim(-0.2, 1.0)
+        self.cur.execute(f"select * from Companies where Name = \'{stock2.companyName}\'")
+        result = self.cur.fetchone()
+        print(f"{stock2.companyName}: {result[1]}")
 
-            # prepare data
-            stock1 = selectStocks[0]
-            stock2 = selectStocks[1]
-            companies = f"{stock1.companyName}, {stock2.companyName}"
+        # update right figure plot
+        ax = fig.add_subplot(1, 1, 1, projection='3d')
+        ax.clear()
+        ax.set_xticks([i for i in range(self.keyword_cnt + 1)])
+        ax.set_yticks([i for i in range(self.keyword_cnt + 1)])
+        ax.set_zticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+        ax.set_zlim(-0.2, 1.0)
 
-            self.cur.execute(f"select * from Relations where Companies = \'{companies}\'")
-            result = self.cur.fetchone()
+        # prepare data
+        stock1 = selectStocks[0]
+        stock2 = selectStocks[1]
+        companies = f"{stock1.companyName}, {stock2.companyName}"
 
-            relScore = float(result[2])
-            temp = list(map(float, result[1].split(", ")))
-            keywordRel = []
-            for i in range(self.keyword_cnt):
-                keywordRel.append(temp[self.keyword_cnt * i: self.keyword_cnt * (i + 1)])
+        self.cur.execute(f"select * from Relations where Companies = \'{companies}\'")
+        result = self.cur.fetchone()
 
-            # update figure axes
-            ax.set_title(f"{stock1.companyName} and {stock2.companyName}: {relScore:.1f}")
+        relScore = float(result[2])
+        temp = list(map(float, result[1].split(", ")))
+        keywordRel = []
+        for i in range(self.keyword_cnt):
+            keywordRel.append(temp[self.keyword_cnt * i: self.keyword_cnt * (i + 1)])
 
-            x, y, z = [], [], []
-            dx, dy, dz = [], [], []
-            for i in range(self.keyword_cnt):
-                for j in range(self.keyword_cnt):
-                    x.append(i)
-                    y.append(j)
-                    z.append(0)
-                    dx.append(1)
-                    dy.append(1)
-                    dz.append(keywordRel[i][j])
+        # update figure axes
+        ax.set_title(f"{stock1.companyName} and {stock2.companyName}: {relScore:.1f}")
 
-            dz_np = np.array(dz)
-            dz_np = np.squeeze(dz_np)
+        x, y, z = [], [], []
+        dx, dy, dz = [], [], []
+        for i in range(self.keyword_cnt):
+            for j in range(self.keyword_cnt):
+                x.append(i)
+                y.append(j)
+                z.append(0)
+                dx.append(1)
+                dy.append(1)
+                dz.append(keywordRel[i][j])
 
-            nrm = mpl.colors.Normalize(-1, 1)
-            colors = plt.cm.RdBu(nrm(-dz_np))
-            alpha = np.linspace(0.2, 0.95, self.keyword_cnt, endpoint=True)
+        dz_np = np.array(dz)
+        dz_np = np.squeeze(dz_np)
 
-            for i in range(len(x)):
-                ax.bar3d(x[i], y[i], z[i], dx[i], dy[i], dz[i], alpha=alpha[i % self.keyword_cnt], color=colors[i],
-                         linewidth=0)
-            resultCanvas.draw()
+        nrm = mpl.colors.Normalize(-1, 1)
+        colors = plt.cm.RdBu(nrm(-dz_np))
+        alpha = np.linspace(0.2, 0.95, self.keyword_cnt, endpoint=True)
 
-            # update left diagram
+        for i in range(len(x)):
+            ax.bar3d(
+                x[i], y[i], z[i], dx[i], dy[i], dz[i],
+                alpha=alpha[i % self.keyword_cnt], color=colors[i], linewidth=0)
+        resultCanvas.draw()
 
-            # parameters
-            hl_line_width = 7
-            oval_hl_line_width = 5
-            oval_outline = 'red'
+        # update left diagram
 
-            # repeat for animation)
-            animation_cnt = 20
+        # parameters
+        hl_line_width = 7
+        oval_hl_line_width = 5
+        oval_outline = 'red'
 
-            for cnt in range(animation_cnt + 1):
-                # clear bolded items
-                for item in boldItems:
-                    displayCanvas.delete(item)
+        # relation data
+        query = f"{selectStocks[0].companyName}, {selectStocks[1].companyName}"
+        self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
+        dataValue = float(self.cur.fetchone()[0])
 
-                # redraw
-                total_perc = cnt / animation_cnt
+        # repeat for animation
+        animation_cnt = 40
 
-                # draw bolded color line
-                idx1 = selectIdx[0]
-                idx2 = selectIdx[1]
+        for cnt in range(animation_cnt + 1):
+            # clear bolded items
+            for item in boldItems:
+                displayCanvas.delete(item)
+            boldItems.clear()
 
-                query = f"{selectStocks[0].companyName}, {selectStocks[1].companyName}"
-                self.cur.execute(f"select Final_Value from Relations where Companies = \'{query}\';")
-                dataValue = float(self.cur.fetchone()[0])
+            # redraw
+            total_perc = sqrt(1 - ((cnt - animation_cnt) ** 2 / (animation_cnt ** 2)))
 
-                boldItems.append(self.__drawColorLine(
-                    positions[idx1][0], positions[idx1][1], positions[idx2][0], positions[idx2][1], displayCanvas,
-                    hl_line_width * total_perc, dataValue))
+            # draw bolded color line
+            idx1 = selectIdx[0]
+            idx2 = selectIdx[1]
 
-                # redraw ovals & stock labels
-                for idx in [idx1, idx2]:
-                    boldItems.append(
-                        displayCanvas.create_oval(positions[idx][0] - oval_width // 2,
-                                                  positions[idx][1] - oval_height // 2,
-                                                  positions[idx][0] + oval_width // 2,
-                                                  positions[idx][1] + oval_height // 2,
-                                                  width=oval_hl_line_width * total_perc, outline=oval_outline, fill=oval_color))
-                    boldItems.append(displayCanvas.create_text(positions[idx][0], positions[idx][1],
-                                                               text=self.allStockList[idx].companyName[:2]))
-                # root.update()
-                toplevel.update()
-                sleep(0.01)
+            # line pos calculation
+            mid_pos = [(positions[idx1][0] + positions[idx2][0]) / 2, (positions[idx1][1] + positions[idx2][1]) / 2]
+            line1_pos = [[positions[idx1][0], positions[idx1][1]], [
+                total_perc * mid_pos[0] + (1 - total_perc) * positions[idx1][0],
+                total_perc * mid_pos[1] + (1 - total_perc) * positions[idx1][1]
+            ]]
+            line2_pos = [[positions[idx2][0], positions[idx2][1]], [
+                total_perc * mid_pos[0] + (1 - total_perc) * positions[idx2][0],
+                total_perc * mid_pos[1] + (1 - total_perc) * positions[idx2][1]
+            ]]
+            # stock 1 line
+            boldItems.append(self.__drawColorLine(
+                line1_pos[0][0], line1_pos[0][1], line1_pos[1][0], line1_pos[1][1],
+                displayCanvas, hl_line_width * total_perc, dataValue))
+            # stock 2 line
+            boldItems.append(self.__drawColorLine(
+                line2_pos[0][0], line2_pos[0][1], line2_pos[1][0], line2_pos[1][1],
+                displayCanvas, hl_line_width * total_perc, dataValue))
 
+            # redraw ovals & stock labels
+            for idx in [idx1, idx2]:
+                boldItems.append(displayCanvas.create_oval(
+                    positions[idx][0] - oval_width // 2,
+                    positions[idx][1] - oval_height // 2,
+                    positions[idx][0] + oval_width // 2,
+                    positions[idx][1] + oval_height // 2,
+                    width=oval_hl_line_width * total_perc, outline=oval_outline, fill=oval_color))
+                boldItems.append(displayCanvas.create_text(
+                    positions[idx][0], positions[idx][1], text=self.allStockList[idx].companyName[:2]))
+
+            toplevel.update()
+            sleep(0.01)
 
     def __destroyToplevel(self, event, window: Toplevel) -> None:
         """
@@ -839,10 +804,10 @@ class System:
         self.__updateSubFrame2(subFrame2Canvas, parameters, stock_inc, main_idx)
 
     def __subFrame2CanvasInit(self, subFrame2Canvas: Canvas, parameters: list) -> None:
-        [subdiv_num, color, canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad,
-         legend_ypad, legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset,
-         x_label_yoffset, y_label_xoffset, highlight_position, highlight_height, y_axis_offset,
-         graph_top_start, graph_bottom_padding, highlight_width] = parameters
+        [canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad, legend_ypad,
+         legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset, x_label_yoffset, y_label_xoffset,
+         highlight_position, highlight_height, y_axis_offset, graph_top_start, graph_bottom_padding,
+         highlight_width] = parameters
 
         canvas_height = subFrame2Canvas.winfo_height()
         canvas_width = subFrame2Canvas.winfo_width()
@@ -862,59 +827,66 @@ class System:
             right_xpos = left_xpos + legend_width
             color_idx = int((max_graph_height - ypos) / (max_graph_height - min_graph_height) * subdiv_num)
             subFrame2Canvas.create_line(left_xpos, ypos, right_xpos, ypos, fill=color[color_idx], width=1)
-        subFrame2Canvas.create_rectangle(legend_labelpad + legend_xpad, min_graph_height,
-                                         legend_labelpad + legend_xpad + legend_width, max_graph_height,
-                                         width=2)
+        subFrame2Canvas.create_rectangle(
+            legend_labelpad + legend_xpad, min_graph_height,
+            legend_labelpad + legend_xpad + legend_width, max_graph_height, width=2)
 
         # legend label
-        subFrame2Canvas.create_text(legend_labelpad - y_label_xoffset, (min_graph_height + max_graph_height) / 2,
-                                    text="Similarity", font=canvas_axis_font, angle=90)
-        subFrame2Canvas.create_text(legend_labelpad - y_label_xoffset, min_graph_height + axis_end_padding,
-                                    text="Max", font=canvas_axis_font, angle=90)
-        subFrame2Canvas.create_text(legend_labelpad - y_label_xoffset, max_graph_height - axis_end_padding,
-                                    text="Min", font=canvas_axis_font, angle=90)
+        subFrame2Canvas.create_text(
+            legend_labelpad - y_label_xoffset, (min_graph_height + max_graph_height) / 2,
+            text="Similarity", font=canvas_axis_font, angle=90)
+        subFrame2Canvas.create_text(
+            legend_labelpad - y_label_xoffset, min_graph_height + axis_end_padding,
+            text="Max", font=canvas_axis_font, angle=90)
+        subFrame2Canvas.create_text(
+            legend_labelpad - y_label_xoffset, max_graph_height - axis_end_padding,
+            text="Min", font=canvas_axis_font, angle=90)
 
         # y axis
-        subFrame2Canvas.create_line((min_graph_width + max_graph_width) / 2, title_yoffset + axis_end_padding,
-                                    (min_graph_width + max_graph_width) / 2, max_graph_height - highlight_position - (highlight_height / 2),
-                                    dash=(3, 5), fill='black', width=2)
+        subFrame2Canvas.create_line(
+            (min_graph_width + max_graph_width) / 2, title_yoffset + axis_end_padding,
+            (min_graph_width + max_graph_width) / 2, max_graph_height - highlight_position - (highlight_height / 2),
+            dash=(3, 5), fill='black', width=2)
 
         # x axis
-        subFrame2Canvas.create_line(min_graph_width, max_graph_height,
-                                    max_graph_width, max_graph_height,
-                                    fill='black', width=line_width)
+        subFrame2Canvas.create_line(
+            min_graph_width, max_graph_height,
+            max_graph_width, max_graph_height,
+            fill='black', width=line_width)
         # x axis tick
-        subFrame2Canvas.create_line((min_graph_width + max_graph_width) / 2, max_graph_height - tick_length / 2,
-                                    (min_graph_width + max_graph_width) / 2, max_graph_height + tick_length / 2,
-                                    fill='black', width=line_width)
-
-        # y axis label
-        '''subFrame2Canvas.create_text(canvas_width / 2, y_label_yoffset, text="Stocks", font=canvas_axis_font)'''
+        subFrame2Canvas.create_line(
+            (min_graph_width + max_graph_width) / 2, max_graph_height - tick_length / 2,
+            (min_graph_width + max_graph_width) / 2, max_graph_height + tick_length / 2,
+            fill='black', width=line_width)
 
         # x axis label
-        subFrame2Canvas.create_text((min_graph_width + max_graph_width) / 2, max_graph_height + x_label_yoffset,
-                                    text="Increase (%)", font=canvas_axis_font)
-        subFrame2Canvas.create_text(max_graph_width + axis_end_padding - x_label_xoffset,
-                                    max_graph_height + x_label_yoffset,
-                                    text="+ (%)", font=canvas_axis_font)
-        subFrame2Canvas.create_text(min_graph_width + x_label_xoffset,
-                                    max_graph_height + x_label_yoffset,
-                                    text="- (%)", font=canvas_axis_font)
+        subFrame2Canvas.create_text(
+            (min_graph_width + max_graph_width) / 2, max_graph_height + x_label_yoffset,
+            text="Increase (%)", font=canvas_axis_font)
+        subFrame2Canvas.create_text(
+            max_graph_width + axis_end_padding - x_label_xoffset, max_graph_height + x_label_yoffset,
+            text="+ (%)", font=canvas_axis_font)
+        subFrame2Canvas.create_text(
+            min_graph_width + x_label_xoffset, max_graph_height + x_label_yoffset,
+            text="- (%)", font=canvas_axis_font)
 
         # highlight rectangle
-        subFrame2Canvas.create_rectangle((min_graph_width + max_graph_width) / 2 - highlight_width, max_graph_height - highlight_position - highlight_height / 2,
-                                         (min_graph_width + max_graph_width) / 2 + highlight_width, max_graph_height - highlight_position + highlight_height / 2,
-                                         fill='white', width=0)
+        subFrame2Canvas.create_rectangle(
+            (min_graph_width + max_graph_width) / 2 - highlight_width,
+            max_graph_height - highlight_position - highlight_height / 2,
+            (min_graph_width + max_graph_width) / 2 + highlight_width,
+            max_graph_height - highlight_position + highlight_height / 2,
+            fill='white', width=0)
 
     def __updateSubFrame2(self, subFrame2Canvas: Canvas, parameters: list, stock_inc: list, main_idx: int) -> None:
         if main_idx == 0:
             return
 
         # unpack arguments
-        [subdiv_num, color, canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad,
-         legend_ypad, legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset,
-         x_label_yoffset, y_label_xoffset, highlight_position, highlight_height, y_axis_offset,
-         graph_top_start, graph_bottom_padding, highlight_width] = parameters
+        [canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad, legend_ypad,
+         legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset, x_label_yoffset, y_label_xoffset,
+         highlight_position, highlight_height, y_axis_offset, graph_top_start, graph_bottom_padding,
+         highlight_width] = parameters
 
         # reset canvas
         subFrame2Canvas.delete('all')
@@ -940,8 +912,9 @@ class System:
 
         maxInc = minInc = self.allStockList[0].stockChangeDataShort[0] / self.allStockList[0].stockDataShort[0] * 100
         for i in range(len(self.allStockList)):
-            percs = [self.allStockList[i].stockChangeDataShort[j] / self.allStockList[i].stockDataShort[j] * 100
-                     for j in range(len(self.allStockList[i].stockChangeDataShort))]
+            percs = [
+                self.allStockList[i].stockChangeDataShort[j] / self.allStockList[i].stockDataShort[j] * 100
+                for j in range(len(self.allStockList[i].stockChangeDataShort))]
             maxInc = max(maxInc, max(percs))
             minInc = min(minInc, min(percs))
 
@@ -962,13 +935,15 @@ class System:
         canvas_width = subFrame2Canvas.winfo_width()
 
         min_graph_height = graph_top_start + box_ypad
-        max_graph_height = canvas_height - axis_end_padding - graph_bottom_padding - highlight_position - (highlight_height / 2) - box_ypad
+        max_graph_height = canvas_height - axis_end_padding - graph_bottom_padding - highlight_position - (
+                    highlight_height / 2) - box_ypad
         min_graph_width = (legend_xpad * 2 + legend_width + legend_labelpad) + box_xpad
         max_graph_width = canvas_width - axis_end_padding - box_xpad
 
         # label main stock
-        subFrame2Canvas.create_text((min_graph_width + max_graph_width) / 2, title_yoffset,
-                                    text=f"{self.allStockList[main_idx - 1].companyName}", font=canvas_title_font)
+        subFrame2Canvas.create_text(
+            (min_graph_width + max_graph_width) / 2, title_yoffset,
+            text=f"{self.allStockList[main_idx - 1].companyName}", font=canvas_title_font)
 
         # repeat for animation
         animation_cnt = 40
@@ -989,27 +964,34 @@ class System:
                     idx = i - (i > main_idx - 1)
                     color_idx = int((stockRelData[idx] - minRelScore) / (maxRelScore - minRelScore) * subdiv_num)
 
-                    change_data = [self.allStockList[i].stockChangeDataShort[j] / self.allStockList[i].stockDataShort[j] * 100
-                                   for j in range(len(self.allStockList[i].stockChangeDataShort))]
+                    change_data = [
+                        self.allStockList[i].stockChangeDataShort[j] / self.allStockList[i].stockDataShort[j] * 100
+                        for j in range(len(self.allStockList[i].stockChangeDataShort))]
                     left_xperc = min(change_data) / max(abs(maxInc), abs(minInc))
                     right_xperc = max(change_data) / max(abs(maxInc), abs(minInc))
                     cur_xperc = stock_inc[i] / max(abs(maxInc), abs(minInc))
 
                     # multiply animation perc
                     perc_list = [left_xperc, right_xperc, cur_xperc]
-                    for i in range(len(perc_list)):
-                        perc_list[i] *= total_perc
+                    for j in range(len(perc_list)):
+                        perc_list[j] *= total_perc
 
                     positions.append([perc_list, idx, color_idx])
 
             # calculate final positions
             for pos in positions:
-                left_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][0]
-                right_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][1]
-                cur_xpos = (max_graph_width + min_graph_width) / 2 + (max_graph_width - min_graph_width) / 2 * pos[0][2]
+                left_xpos = \
+                    (max_graph_width + min_graph_width) / 2 \
+                    + (max_graph_width - min_graph_width) / 2 * pos[0][0]
+                right_xpos = \
+                    (max_graph_width + min_graph_width) / 2 \
+                    + (max_graph_width - min_graph_width) / 2 * pos[0][1]
+                cur_xpos = \
+                    (max_graph_width + min_graph_width) / 2 \
+                    + (max_graph_width - min_graph_width) / 2 * pos[0][2]
 
-                y_pos = min_graph_height + (max_graph_height - min_graph_height - box_width) / (
-                        len(self.allStockList) - 2) * pos[1]
+                y_pos = min_graph_height + (max_graph_height - min_graph_height - box_width) \
+                        / (len(self.allStockList) - 2) * pos[1]
                 color_hex = color[pos[2]]
                 final_positions.append([[left_xpos, right_xpos, cur_xpos], y_pos, color_hex])
 
@@ -1022,7 +1004,7 @@ class System:
                 center_oval = subFrame2Canvas.create_oval(
                     pos[0][2] - box_length / 2, pos[1] - box_width / 2,
                     pos[0][2] + box_length / 2, pos[1] + box_width / 2,
-                    width=0, fill=pos[2]
+                    width=0, fill=pos[2], tags=tag
                 )
                 center_line = subFrame2Canvas.create_line(
                     pos[0][0], pos[1],
@@ -1048,34 +1030,40 @@ class System:
             stock_idx = i + (i >= main_idx - 1)
             tag = f"box{stock_idx}"
             param = stockRelData, box_line_width, box_width, box_length, box_ypad, box_xpad, min_graph_height, max_graph_height, min_graph_width, max_graph_width, highlight_position, highlight_height, canvas_axis_font
-            subFrame2Canvas.tag_bind(tag, "<Enter>",
-                                     lambda event, canvas=subFrame2Canvas, stock_idx=stock_idx, rel_idx=i, tag=tag, parameters=param:
-                                     self.__subFrame2SpecificDisplay(canvas, stock_idx, rel_idx, tag, parameters))
-            subFrame2Canvas.bind("<Button-1>",
-                                 lambda event, canvas=subFrame2Canvas:
-                                 self.__subFrame2SpecificDisplayReset(canvas))
+            subFrame2Canvas.tag_bind(
+                tag, "<Enter>",
+                lambda event, canvas=subFrame2Canvas, stock_idx=stock_idx, rel_idx=i, tag=tag, parameters=param:
+                self.__subFrame2SpecificDisplay(canvas, stock_idx, rel_idx, tag, parameters))
+            subFrame2Canvas.bind(
+                "<Button-1>",
+                lambda event, canvas=subFrame2Canvas:
+                self.__subFrame2SpecificDisplayReset(canvas))
 
     def __subFrame2SpecificDisplay(self, canvas: Canvas, stock_idx: int, rel_idx: int, tag: str, parameters: list):
-        [stockRelData, box_line_width, box_width, box_length, box_ypad, box_xpad, min_height, max_height, min_width, max_width,
-         highlight_position, highlight_height, canvas_axis_font] = parameters
+        [stockRelData, box_line_width, box_width, box_length, box_ypad, box_xpad, min_height, max_height, min_width,
+         max_width, highlight_position, highlight_height, canvas_axis_font] = parameters
         self.__subFrame2SpecificDisplayReset(canvas)
 
-        increase = self.allStockList[stock_idx].stockChangeDataShort[-1] / self.allStockList[stock_idx].stockDataShort[-1] * 100
+        increase = \
+            self.allStockList[stock_idx].stockChangeDataShort[-1] / \
+            self.allStockList[stock_idx].stockDataShort[-2] * 100
         similarity = stockRelData[rel_idx]
 
-        item = canvas.find_withtag(tag)[0]
-        bounds = canvas.bbox(item)
+        items = canvas.find_withtag(tag)
+        bounds = list(zip(*[canvas.bbox(items[j]) for j in range(len(items))]))
         canvas.create_rectangle(
-            bounds[0], (bounds[3] + bounds[1]) / 2 + (box_width / 2 + 1),
-            bounds[2], (bounds[3] + bounds[1]) / 2 - (box_width / 2 + 1),
+            min(bounds[0]), min(bounds[1]),
+            max(bounds[2]), max(bounds[3]),
             width=2, outline="red", tags="highlight"
         )
 
-        canvas.create_text((max_width + min_width) / 2, max_height + highlight_height / 2 + box_ypad,
-                           text=f"Selected: {self.allStockList[stock_idx].companyName}\n "
-                                f"Increase: {increase: .2f}%\n"
-                                f"Similarity: {similarity: .2f}",
-                           fill="red", tags="highlight", font=canvas_axis_font, justify=CENTER)
+        canvas.create_text(
+            (max_width + min_width) / 2, max_height + highlight_height / 2 + box_ypad,
+            text=f"Selected: {self.allStockList[stock_idx].companyName}\n"
+                 f"Increase: {increase: .2f}%\n"
+                 f"Similarity: {similarity: .2f}",
+            fill="red", tags="highlight", font=canvas_axis_font, justify=CENTER
+        )
 
     def __subFrame2SpecificDisplayReset(self, canvas: Canvas):
         canvas.delete("highlight")
@@ -1085,7 +1073,8 @@ class System:
             return
 
         # unpack arguments
-        [priceLabel, subFrame3Canvas1, subFrame3Canvas2, trendShort, changeImpShort, predictShort, relatedShort, trendLong, changeImpLong, predictLong, relatedLong] = widgets
+        [priceLabel, subFrame3Canvas1, subFrame3Canvas2, trendShort, changeImpShort, predictShort, relatedShort,
+         trendLong, changeImpLong, predictLong, relatedLong] = widgets
 
         # other parameters
         company_cnt = 6
@@ -1096,7 +1085,6 @@ class System:
 
         # find stock
         curStock = self.allStockList[main_idx - 1]
-        print(f"Cur Stock: {curStock.companyName}")
 
         # update price
         priceLabel.config(text=f"Current Price: {curStock.stockDataShort[-1]:.2f} USD")
@@ -1152,39 +1140,45 @@ class System:
             int_it += short_interval
 
         for val in short_interval_values:
-            short_interval_raw.append(self.__findCanvasYPos(subFrame3Canvas1, y_pad, short_minval, short_maxval, val))
+            short_interval_raw.append(self.__findCanvasYPos(
+                subFrame3Canvas1, y_pad, short_minval, short_maxval, val))
 
         for i in range(len(curStock.stockDataShort)):
-            short_points_raw.append(self.__findCanvasPos(subFrame3Canvas1,
-                                                         point_pad + axis_pad, y_pad,
-                                                         len(curStock.stockDataShort),
-                                                         short_minval, short_maxval,
-                                                         i, curStock.stockDataShort[i]))
+            short_points_raw.append(self.__findCanvasPos(
+                subFrame3Canvas1, point_pad + axis_pad, y_pad, len(curStock.stockDataShort), short_minval, short_maxval,
+                i, curStock.stockDataShort[i]))
 
         # draw canvas 1
-        subFrame3Canvas1.create_line(canvas_width - axis_pad, 0,
-                                     canvas_width - axis_pad, canvas_height,
-                                     fill=axis_fill, width=axis_width)
+        subFrame3Canvas1.create_line(
+            canvas_width - axis_pad, 0,
+            canvas_width - axis_pad, canvas_height,
+            fill=axis_fill, width=axis_width)
 
         for i in range(len(short_interval_values)):
             val = short_interval_values[i]
             raw_val = short_interval_raw[i]
 
-            subFrame3Canvas1.create_line(0, raw_val,
-                                         canvas_width - axis_pad, raw_val,
-                                         fill=grid_fill, width=grid_width)
-            subFrame3Canvas1.create_line(canvas_width - axis_pad, raw_val,
-                                         canvas_width - axis_pad + tick_length, raw_val,
-                                         fill=tick_fill, width=tick_width)
-            subFrame3Canvas1.create_text(canvas_width - axis_pad + point_pad, raw_val, text=f"{val:.0f}")
+            subFrame3Canvas1.create_line(
+                0, raw_val,
+                canvas_width - axis_pad, raw_val,
+                fill=grid_fill, width=grid_width)
+            subFrame3Canvas1.create_line(
+                canvas_width - axis_pad, raw_val,
+                canvas_width - axis_pad + tick_length, raw_val,
+                fill=tick_fill, width=tick_width)
+            subFrame3Canvas1.create_text(
+                canvas_width - axis_pad + point_pad, raw_val,
+                text=f"{val:.0f}")
 
         for i in range(len(short_points_raw) - 1):
-            subFrame3Canvas1.create_line(short_points_raw[i][0], short_points_raw[i][1],
-                                         short_points_raw[i + 1][0], short_points_raw[i + 1][1],
-                                         fill=line_fill, width=line_width)
-        subFrame3Canvas1.create_oval(short_points_raw[-1][0] - oval_size, short_points_raw[-1][1] - oval_size,
-                                     short_points_raw[-1][0] + oval_size, short_points_raw[-1][1] + oval_size,
-                                     fill=line_fill, width=0)
+            subFrame3Canvas1.create_line(
+                short_points_raw[i][0], short_points_raw[i][1],
+                short_points_raw[i + 1][0], short_points_raw[i + 1][1],
+                fill=line_fill, width=line_width)
+        subFrame3Canvas1.create_oval(
+            short_points_raw[-1][0] - oval_size, short_points_raw[-1][1] - oval_size,
+            short_points_raw[-1][0] + oval_size, short_points_raw[-1][1] + oval_size,
+            fill=line_fill, width=0)
 
         # canvas 1 data
 
@@ -1213,41 +1207,48 @@ class System:
             int_it += long_interval
 
         for val in long_interval_values:
-            long_interval_raw.append(self.__findCanvasYPos(subFrame3Canvas2, y_pad, long_minval, long_maxval, val))
+            long_interval_raw.append(self.__findCanvasYPos(
+                subFrame3Canvas2, y_pad, long_minval, long_maxval, val))
 
         for i in range(len(curStock.stockDataLong)):
-            long_points_raw.append(self.__findCanvasPos(subFrame3Canvas2,
-                                                        point_pad + axis_pad, y_pad,
-                                                        len(curStock.stockDataLong),
-                                                        long_minval, long_maxval,
-                                                        i, curStock.stockDataLong[i]))
+            long_points_raw.append(self.__findCanvasPos(
+                subFrame3Canvas2, point_pad + axis_pad, y_pad, len(curStock.stockDataLong), long_minval, long_maxval,
+                i, curStock.stockDataLong[i]))
 
         # draw canvas 2
-        subFrame3Canvas2.create_line(canvas_width - axis_pad, 0,
-                                     canvas_width - axis_pad, canvas_height,
-                                     fill=axis_fill, width=axis_width)
+        subFrame3Canvas2.create_line(
+            canvas_width - axis_pad, 0,
+            canvas_width - axis_pad, canvas_height,
+            fill=axis_fill, width=axis_width)
 
         for i in range(len(long_interval_values)):
             val = long_interval_values[i]
             raw_val = long_interval_raw[i]
 
-            subFrame3Canvas2.create_line(0, raw_val,
-                                         canvas_width - axis_pad, raw_val,
-                                         fill=grid_fill, width=grid_width)
-            subFrame3Canvas2.create_line(canvas_width - axis_pad, raw_val,
-                                         canvas_width - axis_pad + tick_length, raw_val,
-                                         fill=tick_fill, width=tick_width)
-            subFrame3Canvas2.create_text(canvas_width - axis_pad + point_pad, raw_val, text=f"{val:.0f}")
+            subFrame3Canvas2.create_line(
+                0, raw_val,
+                canvas_width - axis_pad, raw_val,
+                fill=grid_fill, width=grid_width)
+            subFrame3Canvas2.create_line(
+                canvas_width - axis_pad, raw_val,
+                canvas_width - axis_pad + tick_length, raw_val,
+                fill=tick_fill, width=tick_width)
+            subFrame3Canvas2.create_text(
+                canvas_width - axis_pad + point_pad, raw_val,
+                text=f"{val:.0f}")
 
         for i in range(len(long_points_raw) - 1):
-            subFrame3Canvas2.create_line(long_points_raw[i][0], long_points_raw[i][1],
-                                         long_points_raw[i + 1][0], long_points_raw[i + 1][1],
-                                         fill=line_fill, width=line_width)
-        subFrame3Canvas2.create_oval(long_points_raw[-1][0] - oval_size, long_points_raw[-1][1] - oval_size,
-                                     long_points_raw[-1][0] + oval_size, long_points_raw[-1][1] + oval_size,
-                                     fill=line_fill, width=0)
+            subFrame3Canvas2.create_line(
+                long_points_raw[i][0], long_points_raw[i][1],
+                long_points_raw[i + 1][0], long_points_raw[i + 1][1],
+                fill=line_fill, width=line_width)
+        subFrame3Canvas2.create_oval(
+            long_points_raw[-1][0] - oval_size, long_points_raw[-1][1] - oval_size,
+            long_points_raw[-1][0] + oval_size, long_points_raw[-1][1] + oval_size,
+            fill=line_fill, width=0)
 
-        predictionResults = self.__calculatePrediction(curStock)  # [(short-term, percent, [stocks]), (long-term, percent, [stocks])]
+        predictionResults = self.__calculatePrediction(
+            curStock)  # [(short-term, percent, [stocks]), (long-term, percent, [stocks])]
 
         # update short info
         trendShortPercent = curStock.stockChangeDataShort[-1] / curStock.stockDataShort[-2] * 100
@@ -1327,8 +1328,9 @@ class System:
         predictLong.config(text=predictLongText, fg=predictLongColor)
         relatedLong.config(text=longRelText)
 
-    def __findCanvasPos(self, canvas: Canvas, x_pad: int, y_pad: int, point_cnt: int, min_val: float, max_val: float,
-                        cnt: int, value: float) -> list:
+    def __findCanvasPos(
+            self, canvas: Canvas, x_pad: int, y_pad: int, point_cnt: int, min_val: float, max_val: float,
+            cnt: int, value: float) -> list:
         # pad = axis_pad + point_pad
 
         raw_x = (cnt / (point_cnt - 1)) * (canvas.winfo_width() - x_pad)
@@ -1338,9 +1340,8 @@ class System:
     def __findCanvasYPos(self, canvas: Canvas, y_pad: int, min_val: float, max_val: float, value: float) -> float:
         return (max_val - value) / (max_val - min_val) * (canvas.winfo_height() - 2 * y_pad) + y_pad
 
-    def __calculatePrediction(self, curStock: Stock) -> list:  # returns [(short-term, percent, [stocks]), (long-term, percent, [stocks])]
+    def __calculatePrediction(self, curStock: Stock) -> list:
         curPrice = curStock.stockDataShort[-1]
-
 
         # short term
         shortRelStocks = dict()
@@ -1357,7 +1358,7 @@ class System:
         for stock in shortRelStocks.keys():
             shortInfluence += stock.stockChangeDataShort[-1] * shortRelStocks[stock]
 
-        shortRelStocks =dict(sorted(shortRelStocks.items(), key=lambda x: x[1], reverse=True))
+        shortRelStocks = dict(sorted(shortRelStocks.items(), key=lambda x: x[1], reverse=True))
 
         for key in shortRelStocks:
             if shortRelStocks[key] >= 0.5:
@@ -1378,13 +1379,13 @@ class System:
         for stock in longRelStocks.keys():
             longInfluence += stock.stockChangeDataLong[-1] * longRelStocks[stock]
 
-        longRelStocks = dict(sorted(longRelStocks.items(), key=lambda x: x[1],  reverse=True))
+        longRelStocks = dict(sorted(longRelStocks.items(), key=lambda x: x[1], reverse=True))
 
         for key in longRelStocks:
             if longRelStocks[key] >= 0.5:
                 longRelDisplay.append(key)
 
-        return [(shortChange + shortInfluence, (shortChange + shortInfluence) / curPrice * 100,
-                 shortRelDisplay),
-                (longChange + longInfluence, (longChange + longInfluence) / curPrice * 100,
-                 longRelDisplay)]
+        return [
+            (shortChange + shortInfluence, (shortChange + shortInfluence) / curPrice * 100, shortRelDisplay),
+            (longChange + longInfluence, (longChange + longInfluence) / curPrice * 100, longRelDisplay)
+        ]

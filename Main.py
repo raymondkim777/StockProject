@@ -24,7 +24,6 @@ if __name__ == "__main__":
 
     # -- retrieving stock data & running predictions
     system.runAllPredictAnalysis()
-    # system.showCompanyRels()
 
     # -- display analysis results --
     system.runStockGUI()
