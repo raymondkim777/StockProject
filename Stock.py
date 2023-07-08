@@ -1,5 +1,15 @@
 class Stock:
+    """
+    Stock class that holds relevant stock information.
+    """
     def __init__(self, stockName, companyName):
+        """
+        Class constructor.
+        Initializes/Creates all instance varaibles.
+
+        :param stockName: stock label
+        :param companyName: stock company name
+        """
         self.stockName = stockName
         self.companyName = companyName
 

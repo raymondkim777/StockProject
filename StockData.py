@@ -5,10 +5,20 @@ from statistics import mean, stdev
 
 
 class StockData:
-    def __init__(self):
-        pass
+    """
+    StockData static class for collecting live stock data using Yahoo Finance Library.
+    """
 
-    def retrieveData(self, stock: Stock, short_term: tuple, long_term: tuple) -> bool:
+    @staticmethod
+    def retrieveData(stock: Stock, short_term: tuple, long_term: tuple) -> bool:
+        """
+        Retrieves all stock data for given stock object based on given two time periods.
+
+        :param stock: selected Stock object
+        :param short_term: short term time period (interval, period)
+        :param long_term: long term time period (interval, period)
+        :return: True if all stock data successfully collected, False otherwise
+        """
         data = yf.Ticker(stock.stockName)
         stock_df_short = data.history(interval=short_term[0], period=short_term[1], auto_adjust=False)
         stock_df_long = data.history(interval=long_term[0], period=long_term[1], auto_adjust=False)
@@ -41,7 +51,14 @@ class StockData:
 
         return True
 
-    def analyzeStockData(self, stock: Stock) -> bool:
+    @staticmethod
+    def analyzeStockData(stock: Stock) -> bool:
+        """
+        Analyzes collected stock data for selected stock object to determine significance.
+
+        :param stock: selected Stock object
+        :return: True if stock data exists & successful analysis, False otherwise
+        """
         if len(stock.stockChangeDataShort) == 0 or len(stock.stockChangeDataLong) == 0:
             return False
 

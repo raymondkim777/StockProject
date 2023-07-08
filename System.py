@@ -24,7 +24,6 @@ class System:
         """
         self.allStockList = []
         self.articleData = None
-        self.stockData = StockData()
 
         self.conn = sqlite3.connect("StockDatabase.db")
         self.cur = self.conn.cursor()
@@ -207,18 +206,17 @@ class System:
     def runAllPredictAnalysis(self) -> bool:
         """
         Runs stock data analysis to determine predicted stock movement.
-        Refines stock prediction with company relation values.
 
         :return: None
         """
         # collect past stock data
         for stock in self.allStockList:
-            if not self.stockData.retrieveData(stock, self.timePeriod[0], self.timePeriod[1]):
+            if not StockData.retrieveData(stock, self.timePeriod[0], self.timePeriod[1]):
                 return False
 
         # divide b/w important & nonimportant data change
         for stock in self.allStockList:
-            if not self.stockData.analyzeStockData(stock):
+            if not StockData.analyzeStockData(stock):
                 return False
 
         # find company relation bounds
@@ -242,6 +240,12 @@ class System:
         return True
 
     def runStockGUI(self) -> None:
+        """
+        Runs stock GUI to display all results, including raw stock data increase,
+        company relation values, and prediction values.
+
+        :return: None
+        """
         global root
 
         stock_inc = []
@@ -277,6 +281,7 @@ class System:
         # subframe1 contents
         canvas_head_height = 60
         canvas_row_height = 40
+        canvas_bottom_padding = 20
         frame1bt_height = 60
 
         subFrame1CanvasFrame = Frame(
@@ -294,7 +299,7 @@ class System:
         subFrame1Canvas.bind('<Leave>', lambda event: self.__unbound_to_mousewheel(event, subFrame1Canvas))
 
         subFrame1Canvas.config(yscrollcommand=canvasScrollbar.set)
-        subFrame1Canvas.configure(scrollregion=subFrame1Canvas.bbox("all"))
+        subFrame1Canvas.configure(scrollregion=subFrame1Canvas.bbox(ALL))
 
         # subframe1 canvas contents
         canvas_col_x = [100, 260, 400, 520]
@@ -307,10 +312,12 @@ class System:
 
         mainStockVar = IntVar()
         for i in range(len(self.allStockList)):
-            subFrame1Canvas.create_text(canvas_col_x[0], canvas_head_height * 1.5 + i * canvas_row_height,
-                                        text=self.allStockList[i].companyName, font=default_font)
-            subFrame1Canvas.create_text(canvas_col_x[1], canvas_head_height * 1.5 + i * canvas_row_height,
-                                        text=self.allStockList[i].stockName, font=default_font)
+            subFrame1Canvas.create_text(
+                canvas_col_x[0], canvas_head_height * 1.5 + i * canvas_row_height,
+                text=self.allStockList[i].companyName, font=default_font)
+            subFrame1Canvas.create_text(
+                canvas_col_x[1], canvas_head_height * 1.5 + i * canvas_row_height,
+                text=self.allStockList[i].stockName, font=default_font)
             if stock_inc[i] >= 0:
                 stockColor = 'green'
             else:
@@ -323,8 +330,10 @@ class System:
             subFrame1Canvas.create_window(
                 canvas_col_x[3], canvas_head_height * 1.5 + i * canvas_row_height, anchor=CENTER, window=radio)
 
-        # mainStockVar.set(1)
-        subFrame1Canvas.configure(scrollregion=subFrame1Canvas.bbox("all"))
+        subFrame1CanvasBounds = list(subFrame1Canvas.bbox(ALL))
+        subFrame1CanvasBounds[3] += canvas_bottom_padding
+        # noinspection PyTypeChecker
+        subFrame1Canvas.configure(scrollregion=subFrame1CanvasBounds)
 
         # subframe1 buttons
         subFrame1BtFrame = Frame(subFrame1, height=frame1bt_height, width=frame_widths[0], bg='white')
@@ -496,12 +505,37 @@ class System:
         root.mainloop()
 
     def __bound_to_mousewheel(self, event, canvas: Canvas):
+        """
+        Helper event method for self.runStockGUI() method.
+        Binds scrollwheel to canvas in Frame1 for scrolling when mouse enters canvas widget.
+        Calls this.__on_mousewheel() when mousewheel event is detected.
+
+        :param event: Tkinter event argument for entering
+        :param canvas: Tkinter canvas object
+        :return: None
+        """
         canvas.bind_all("<MouseWheel>", lambda event: self.__on_mousewheel(event, canvas))
 
     def __unbound_to_mousewheel(self, event, canvas: Canvas):
+        """
+        Helper event method for self.runStockGUI() method.
+        Unbinds scrollwheel to canvas when mouse leaves canvas widget.
+
+        :param event: Tkinter event argument for leaving
+        :param canvas: Tkinter canvas object
+        :return: None
+        """
         canvas.unbind_all("<MouseWheel>")
 
     def __on_mousewheel(self, event, canvas: Canvas):
+        """
+        Helper event method for self.__bound_to_mousewheel() method.
+        Scrolls canvas based on mousewheel movement.
+
+        :param event: Tkinter event argument for mousewheel
+        :param canvas: Tkinter canvas object
+        :return: None
+        """
         canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def __displayResults(self) -> None:
@@ -627,6 +661,20 @@ class System:
         relResultWindow.mainloop()
 
     def __drawColorLine(self, x1, y1, x2, y2, canvas, line_width, dataValue) -> list:
+        """
+        Helper method for self.__displayResults() and self.__updateResultToplevel().
+        Draws colored line on given canvas based on coordinates and given data value.
+        Color is chosen based on global color/subdiv_num/maxRelSCore/minRelScore variables.
+
+        :param x1: first x-coordinate
+        :param y1: first y-coordinate
+        :param x2: second x-coordinate
+        :param y2: second y-coordinate
+        :param canvas: given Canvas Tkinter widget
+        :param line_width: given line width
+        :param dataValue: dataValue to compare to max/minRelScore
+        :return: canvas line object
+        """
         color_idx = int((dataValue - minRelScore) / (maxRelScore - minRelScore) * subdiv_num)
         return canvas.create_line(x1, y1, x2, y2, fill=color[color_idx], width=line_width)
 
@@ -794,6 +842,15 @@ class System:
         window.destroy()
 
     def __displaySpecificResults(self, main_idx: int, subFrame2Args: list, subFrame3Args: list) -> None:  # idx: base 1
+        """
+        Helper method for self.__runStockGUI() method.
+        Calls updates on subFrame3 and subFrame2 (in that order).
+
+        :param main_idx: Stock Radiobutton IntVar() value
+        :param subFrame2Args: arguments for updating subFrame2
+        :param subFrame3Args: arguments for updating subFrame3
+        :return: None
+        """
         # updates subFrame2 and subFrame3
 
         # subFrame 3
@@ -804,6 +861,14 @@ class System:
         self.__updateSubFrame2(subFrame2Canvas, parameters, stock_inc, main_idx)
 
     def __subFrame2CanvasInit(self, subFrame2Canvas: Canvas, parameters: list) -> None:
+        """
+        Helper method for self.stockGUI() method.
+        Initializes subFrame2 canvas before use.
+
+        :param subFrame2Canvas: subFrame2 canvas Tkinter widget
+        :param parameters: parameters for subFrame2
+        :return: None
+        """
         [canvas_title_font, canvas_axis_font, canvas_font, title_yoffset, legend_width, legend_xpad, legend_ypad,
          legend_labelpad, axis_end_padding, axis_side_padding, x_label_xoffset, x_label_yoffset, y_label_xoffset,
          highlight_position, highlight_height, y_axis_offset, graph_top_start, graph_bottom_padding,
@@ -879,6 +944,16 @@ class System:
             fill='white', width=0)
 
     def __updateSubFrame2(self, subFrame2Canvas: Canvas, parameters: list, stock_inc: list, main_idx: int) -> None:
+        """
+        Helper method for self.__displaySpecificResults() method.
+        Updates subFrame2 canvas based on given parameter values.
+
+        :param subFrame2Canvas: subFrame2 canvas Tkinter widget
+        :param parameters: parameters for subFrame2
+        :param stock_inc: stock increase value in percentage
+        :param main_idx: stock Radiobutton IntVar() value
+        :return: None
+        """
         if main_idx == 0:
             return
 
@@ -935,8 +1010,9 @@ class System:
         canvas_width = subFrame2Canvas.winfo_width()
 
         min_graph_height = graph_top_start + box_ypad
-        max_graph_height = canvas_height - axis_end_padding - graph_bottom_padding - highlight_position - (
-                    highlight_height / 2) - box_ypad
+        max_graph_height = \
+            canvas_height - axis_end_padding - graph_bottom_padding - highlight_position\
+            - (highlight_height / 2) - box_ypad
         min_graph_width = (legend_xpad * 2 + legend_width + legend_labelpad) + box_xpad
         max_graph_width = canvas_width - axis_end_padding - box_xpad
 
@@ -1037,12 +1113,23 @@ class System:
             subFrame2Canvas.bind(
                 "<Button-1>",
                 lambda event, canvas=subFrame2Canvas:
-                self.__subFrame2SpecificDisplayReset(canvas))
+                canvas.delete("highlight"))
 
     def __subFrame2SpecificDisplay(self, canvas: Canvas, stock_idx: int, rel_idx: int, tag: str, parameters: list):
+        """
+        Helper method for self.__updateSubFrame2() method.
+        Updates highlight related objects in subFrame2 canvas.
+
+        :param canvas: subFrame2 canvas
+        :param stock_idx: stock index based on self.allStockList
+        :param rel_idx: relative stock index excluding currently selected stock
+        :param tag: canvas tagID for highlight related items
+        :param parameters: relevant parameter list
+        :return: None
+        """
         [stockRelData, box_line_width, box_width, box_length, box_ypad, box_xpad, min_height, max_height, min_width,
          max_width, highlight_position, highlight_height, canvas_axis_font] = parameters
-        self.__subFrame2SpecificDisplayReset(canvas)
+        canvas.delete("highlight")
 
         increase = \
             self.allStockList[stock_idx].stockChangeDataShort[-1] / \
@@ -1065,10 +1152,16 @@ class System:
             fill="red", tags="highlight", font=canvas_axis_font, justify=CENTER
         )
 
-    def __subFrame2SpecificDisplayReset(self, canvas: Canvas):
-        canvas.delete("highlight")
-
     def __updateSubFrame3(self, main_idx: int, widgets: list) -> None:
+        """
+        Helper method for self.__displaySpecificResults() method.
+        Updates subFrame3 based on given widget/parameter values.
+
+        :param main_idx: stock index based on self.allStockList
+        :param widgets: relevant widgets/parameters for subFrame3
+        :return: None
+        """
+
         if main_idx == 0:
             return
 
@@ -1331,6 +1424,20 @@ class System:
     def __findCanvasPos(
             self, canvas: Canvas, x_pad: int, y_pad: int, point_cnt: int, min_val: float, max_val: float,
             cnt: int, value: float) -> list:
+        """
+        Helper method for self.__updateSubFrame3() method.
+        Finds correct canvas coordinate position based on given values (x_cnt & stock value).
+
+        :param canvas: given Canvas Tkinter widget
+        :param x_pad: padding in x-direction
+        :param y_pad: padding in y-direction
+        :param point_cnt: total number of points in x-direction
+        :param min_val: minimum y-value
+        :param max_val: maximum y-value
+        :param cnt: current count in x-direction
+        :param value: y-value
+        :return: canvas coordinate list
+        """
         # pad = axis_pad + point_pad
 
         raw_x = (cnt / (point_cnt - 1)) * (canvas.winfo_width() - x_pad)
@@ -1338,9 +1445,29 @@ class System:
         return [raw_x, raw_y]
 
     def __findCanvasYPos(self, canvas: Canvas, y_pad: int, min_val: float, max_val: float, value: float) -> float:
+        """
+        Helper method for self.__updateSubFrame3() method.
+        Finds correct y-coordinate canvas position based on given values (stock value).
+
+        :param canvas: given Canvas Tkinter widget
+        :param y_pad: padding in y-direction
+        :param min_val: minimum y-value
+        :param max_val: maximum y-value
+        :param value: y-value
+        :return: y-coordinate value
+        """
         return (max_val - value) / (max_val - min_val) * (canvas.winfo_height() - 2 * y_pad) + y_pad
 
     def __calculatePrediction(self, curStock: Stock) -> list:
+        """
+        Helper method for self.__updateSubFrame3() method.
+        Calculates predictions for given stock based on current stock data & company relations.
+
+        :param curStock: currently selected Stock object
+        :return:
+            [(short prediction USD, short prediction %, short related stocks list),
+            (long prediction USD, long prediction %, long related stocks list)]
+        """
         curPrice = curStock.stockDataShort[-1]
 
         # short term

@@ -1,6 +1,3 @@
-from System import System
-from Stock import Stock
-
 import sqlite3
 import lxml
 from nltk import word_tokenize
@@ -65,8 +62,9 @@ class DataBase:
                 if self.__existingArticle(articleURL):
                     self.cur.execute(f"select Stocks from Articles where Article_ID = \'{articleURL}\';")
                     cur_stocks = self.cur.fetchone()[0]
-                    self.cur.execute(f"update Articles set Stocks = ? where Article_ID = \'{articleURL}\';",
-                                     (cur_stocks + f", {companyName}",))
+                    self.cur.execute(
+                        f"update Articles set Stocks = ? where Article_ID = \'{articleURL}\';",
+                        (cur_stocks + f", {companyName}",))
                     self.conn.commit()
                 else:
                     extracted = self.__extractArticleText(articleURL)
