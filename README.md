@@ -85,7 +85,7 @@ A visual display of the individual relations of keywords for two stocks can be s
 The collective correlation values for all stocks will be visually displayed using Tkinter, within a Toplevel created by a button on the main page. The left half will display a graph of stocks as nodes and relations as edges, colored with cyan/black based on the stocks' correlation values. Selecting two stocks will update the right half, a MatPlotLib FigureCanvasTkAgg widget in Tkinter displaying a 3d bar graph of keyword relations similar to Figure 1. Such examples are displayed below in Figure 2.1 ~ 2.3.
 
 <figure>
-  <img src="Images/green_ex.png">
+  <img src="Images/blue_ex.png">
   <figcaption>
     Figure 2.1 - Tkinter display for two stocks with high correlation
   </figcaption>
@@ -99,7 +99,7 @@ The collective correlation values for all stocks will be visually displayed usin
 </figure>
 
 <figure>
-  <img src="Images/red_ex.png">
+  <img src="Images/black_ex.png">
   <figcaption>
     Figure 2.3 - Tkinter display for two stocks with low correlation
   </figcaption>
