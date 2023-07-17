@@ -47,10 +47,9 @@ $$W_{i, j} = tf_{i, j} \times \log(\frac{N}{1+df_i})$$
 
 where
 
-$$
-tf_{i, j} = \text{frequency of term $i$ in document $j$} \\
+$$\displaylines{tf_{i, j} = \text{frequency of term $i$ in document $j$} \\
 df_i = \text{number of documents containing $i$} \\
-N = \text{total number of documents}. \\
+N = \text{total number of documents}.} \\
 $$
 
 
