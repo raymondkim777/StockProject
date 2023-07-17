@@ -47,10 +47,10 @@ $$W_{i, j} = tf_{i, j} \times \log(\frac{N}{1+df_i})$$
 
 where
 
-$$
+$$\displaylines{
 tf_{i, j} = \text{frequency of term $i$ in document $j$} \\
 df_i = \text{number of documents containing $i$} \\
-N = \text{total number of documents}. \\
+N = \text{total number of documents}.}
 $$
 
 
@@ -119,11 +119,11 @@ The reason behind the first factor is self explanatory. However, it follows from
 
 Thus, the trend equation is as below:
 
-$$T^{n + 1}(S_i) = T^n(S_i) + \sum \, \left(T^n(S_j) \cdot R^{*}_{i, j}\right) \quad (\forall S_j \in Rel_i)$$
+$$T^{n + 1}(S_i) = T^n(S_i) + \sum \ \left(T^n(S_j) \cdot R^{*}_{i, j}\right) \quad (\forall S_j \in Rel_i)$$
 
 where
 
-$$R^{*}_{i, j} = R_{i, j}(\%) = \frac{R_{i, j} - min(R)}{max(R) - min(R)}$$
+$$R_{i, j}^{*}= R_{i, j}(\\%) = \frac{R_{i, j} - min(R)}{max(R) - min(R)}$$
 
 $$Rel_i = \{ S_j \mid I_j = True \}.$$
 
