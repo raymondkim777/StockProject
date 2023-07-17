@@ -47,10 +47,10 @@ $$W_{i, j} = tf_{i, j} \times \log(\frac{N}{1+df_i})$$
 
 where
 
-$$\displaylines{
+$$
 tf_{i, j} = \text{frequency of term $i$ in document $j$} \\
 df_i = \text{number of documents containing $i$} \\
-N = \text{total number of documents}.}
+N = \text{total number of documents}. \\
 $$
 
 
@@ -132,20 +132,20 @@ As the program is designed to be utilized by traders, the user is required to in
 
 The collective results of the program are visually displayed via the Tkinter GUI library. The root window is split into three subFrames, each responsible for different information.
 
-(IMAGE - Full GUI)
+![Image](Images/full_gui.png)
 
 #### SubFrame1
 The first subFrame displays current stock information, displaying each stock inputted by the user as well as their stock labels and current increase (%). Each stock has Radiobuttons the user can select to view specific details, displayed on the right-hand side.
 
-(IMAGE - subFrame1)
+![Image](Images/subframe1.png)
 
 SubFrame1 also contains a button labeled `Show All Relations` to [visually display company relations in a Toplevel](#visual-display), as aforementioned above.
 
-(IMAGE - all company relations)
+![Image](Images/all_relations.png)
 
 The Toplevel contains dropdown menus that allow the user to select two stocks to view their relation in particular, which highlights elements of the diagram and updates the bar graph on the right.
 
-(Image - specific company relation)
+![Image](Images/specific_relation.png)
 
 #### SubFrame2
 Clicking the `Show Focus Details` button in subFrame1 updates the GUI to show specific details regarding the selected stock, displayed in subFrame2 and subFrame3. SubFrame2 is responsible for visually representing the relevant data for each stock (other stock trends, relations, etc) in a digestible manner.
@@ -159,7 +159,9 @@ The stocks are displayed along the y-axis, with their recent increase range (dur
 #### SubFrame3
 The third subFrame is updated at the same time as subFrame2, and is primarily responsible for prediction results. The current price of the stock is displayed above, with the rest of subFrame3 divided based on short-term and long-term results. For each portion, the subFrame graphs the stock behavior on a Canvas, with specific details below displaying the most recent increase (in USD and %), whether that change was significant (changeImportance), the calculated trend prediction, and a list of the stocks that accounted towards that prediction.
 
+![Image](Images/subframe3.png)
 (Image - subFrame3)
+
 
 ## Reference
 - Christopher D. Manning et al., 2008, Introduction to Information Retrieval (8th Edition)
