@@ -4,6 +4,7 @@ from StockGUI import StockGUI
 
 import sqlite3
 import spacy
+from math import log
 
 
 class System:
@@ -56,8 +57,6 @@ class System:
                 stock1 = self.allStockList[i]
                 stock2 = self.allStockList[j]
                 self.__stockRelCalculate(stock1, stock2)
-        plt.show()
-
     def __stockTermCalculate(self, stock: Stock) -> bool:
         """
         Sub method for self.runAllRelAnalysis method.

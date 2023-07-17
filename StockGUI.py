@@ -4,7 +4,7 @@ import sqlite3
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from math import log, sin, cos, pi, floor, ceil, sqrt
+from math import sin, cos, pi, floor, ceil, sqrt
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from time import sleep
