@@ -111,7 +111,7 @@ where
 
 $$R_{i, j}^{*}= R_{i, j}(\\%) = \frac{R_{i, j} - min(R)}{max(R) - min(R)}$$
 
-$$Rel_i = \\{ S_j \mid I_j = True \\}.$$
+$$Rel_i = \\{ S_j \mid R_{i, j}^{*} \geq 0.5, I_j = True \\}.$$
 
 ### Stock GUI
 As the program is designed to be utilized by traders, the user is required to input their desired stocks into a text file ("company_names.txt"), with each line of the following format: *stock_label*, *company_name*. The program then runs article crawling, keyword extraction, company relation computation, and predictions, storing relevant information in both Database.db and Stock objects.
