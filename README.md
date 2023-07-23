@@ -142,7 +142,7 @@ Clicking the `Show Focus Details` button in subFrame1 updates the GUI to show sp
 
 <figure>
   <p align="center">
-    <img src="Images/subFrame2Animation.gif" height=450>
+    <img src="Images/subFrame2Animation.gif" height=450 width=638>
   </p>
 </figure>
 
@@ -150,7 +150,7 @@ The stocks are displayed along the y-axis, with their recent increase range (dur
 
 <figure>
   <p align="center">
-    <img src="Images/subFrame2HoverAnimation.gif" height=450>
+    <img src="Images/subFrame2HoverAnimation.gif" height=450 width=638>
   </p>
 </figure>
 
