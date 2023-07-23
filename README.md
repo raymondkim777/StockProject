@@ -72,7 +72,7 @@ A visual display of the individual relations of keywords for two stocks can be s
 
 <figure>
   <p align="center">
-    <img src="Images/graph_ex.png">
+    <img src="Images/graph_ex.png" | width=500>
   </p>
   <figcaption>
     Figure 1 - 3D bar graph plotting the 10 keywords for each stock on the x, y axes and the correlation score on the z axis
@@ -88,14 +88,14 @@ The collective correlation values for all stocks will be visually displayed usin
   <figcaption>
     Figure 2.1 - Tkinter display for two stocks with high correlation
   </figcaption>
-</figure>
+</figure>  
 
 <figure>
   <img src="Images/mid_ex.png">
   <figcaption>
     Figure 2.2 - Tkinter display for two stocks with medium correlation
   </figcaption>
-</figure>
+</figure>  
 
 <figure>
   <img src="Images/black_ex.png">
@@ -136,7 +136,11 @@ The collective results of the program are visually displayed via the Tkinter GUI
 #### SubFrame1
 The first subFrame displays current stock information, displaying each stock inputted by the user as well as their stock labels and current increase (%). Each stock has Radiobuttons the user can select to view specific details, displayed on the right-hand side.
 
-![Image](Images/subframe1.png)
+<figure>
+  <p align="center">
+    <img src="Images/subframe1.png" height=480>
+  </p>
+</figure>
 
 SubFrame1 also contains a button labeled `Show All Relations` to [visually display company relations in a Toplevel](#visual-display), as aforementioned above.
 
@@ -149,18 +153,28 @@ The Toplevel contains dropdown menus that allow the user to select two stocks to
 #### SubFrame2
 Clicking the `Show Focus Details` button in subFrame1 updates the GUI to show specific details regarding the selected stock, displayed in subFrame2 and subFrame3. SubFrame2 is responsible for visually representing the relevant data for each stock (other stock trends, relations, etc) in a digestible manner.
 
-![Image](Images/subFrame2Animation.gif)
+<figure>
+  <p align="center">
+    <img src="Images/subFrame2Animation.gif" height=480>
+  </p>
+</figure>
 
 The stocks are displayed along the y-axis, with their recent increase range (during the short-term time period) shown along the x-axis. Each stock is colored according to their correlation values, with a legend displayed on the left for clarity. Hovering the cursor over each stock will highlight it, showing numeric details in a window below.
 
-![Image](Images/subFrame2HoverAnimation.gif)
+<figure>
+  <p align="center">
+    <img src="Images/subFrame2HoverAnimation.gif" height=480>
+  </p>
+</figure>
 
 #### SubFrame3
 The third subFrame is updated at the same time as subFrame2, and is primarily responsible for prediction results. The current price of the stock is displayed above, with the rest of subFrame3 divided based on short-term and long-term results. For each portion, the subFrame graphs the stock behavior on a Canvas, with specific details below displaying the most recent increase (in USD and %), whether that change was significant (changeImportance), the calculated trend prediction, and a list of the stocks that accounted towards that prediction.
 
-![Image](Images/subframe3.png)
-(Image - subFrame3)
-
+<figure>
+  <p align="center">
+    <img src="Images/subframe3.png" height=480>
+  </p>
+</figure>
 
 ## Reference
 - Christopher D. Manning et al., 2008, Introduction to Information Retrieval (8th Edition)
