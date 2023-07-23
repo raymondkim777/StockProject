@@ -105,7 +105,7 @@ The reason behind the first factor is self explanatory. However, it follows from
 
 Thus, the trend equation is as below:
 
-$$T^{n + 1}(S_i) = T^n(S_i) + \sum \ \left(T^n(S_j) \cdot R^{*}_{i, j}\right) \quad (\forall S_j \in Rel_i)$$
+$$T^{n + 1}(S_i) = T^n(S_i) + \sum \left(T^n(S_j) \cdot R^{*}_{i, j}\right) \quad (\forall S_j \in Rel_i)$$
 
 where
 
