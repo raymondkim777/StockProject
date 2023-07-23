@@ -138,7 +138,7 @@ The first subFrame displays current stock information, displaying each stock inp
 
 <figure>
   <p align="center">
-    <img src="Images/subframe1.png" height=480>
+    <img src="Images/subframe1.png" height=450>
   </p>
 </figure>
 
@@ -155,7 +155,7 @@ Clicking the `Show Focus Details` button in subFrame1 updates the GUI to show sp
 
 <figure>
   <p align="center">
-    <img src="Images/subFrame2Animation.gif" height=480>
+    <img src="Images/subFrame2Animation.gif" height=450>
   </p>
 </figure>
 
@@ -163,7 +163,7 @@ The stocks are displayed along the y-axis, with their recent increase range (dur
 
 <figure>
   <p align="center">
-    <img src="Images/subFrame2HoverAnimation.gif" height=480>
+    <img src="Images/subFrame2HoverAnimation.gif" height=450>
   </p>
 </figure>
 
@@ -172,7 +172,7 @@ The third subFrame is updated at the same time as subFrame2, and is primarily re
 
 <figure>
   <p align="center">
-    <img src="Images/subframe3.png" height=480>
+    <img src="Images/subframe3.png" height=450>
   </p>
 </figure>
 
