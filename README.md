@@ -72,7 +72,7 @@ A visual display of the individual relations of keywords for two stocks can be s
 
 <figure>
   <p align="center">
-    <img src="Images/graph_ex.png" | width=500>
+    <img src="Images/graph_ex.png" | width=400>
   </p>
   <figcaption>
     Figure 1 - 3D bar graph plotting the 10 keywords for each stock on the x, y axes and the correlation score on the z axis
