@@ -74,35 +74,22 @@ A visual display of the individual relations of keywords for two stocks can be s
   <p align="center">
     <img src="Images/graph_ex.png" | width=400>
   </p>
-  <figcaption>
-    Figure 1 - 3D bar graph plotting the 10 keywords for each stock on the x, y axes and the correlation score on the z axis
-  </figcaption>
 </figure>
+
+*Figure 1 - 3D bar graph plotting the 10 keywords for each stock on the x, y axes and the correlation score on the z axis*
 
 #### Visual Display
 
 The collective correlation values for all stocks will be visually displayed using Tkinter, within a Toplevel created by a button on the main page. The left half will display a graph of stocks as nodes and relations as edges, colored with cyan/black based on the stocks' correlation values. Selecting two stocks will update the right half, a MatPlotLib FigureCanvasTkAgg widget in Tkinter displaying a 3d bar graph of keyword relations similar to Figure 1. Such examples are displayed below in Figure 2.1 ~ 2.3.
 
-<figure>
-  <img src="Images/blue_ex.png">
-  <figcaption>
-    Figure 2.1 - Tkinter display for two stocks with high correlation
-  </figcaption>
-</figure>  
+![Image](Images/blue_ex.png)
+*Figure 2.1 - Tkinter display for two stocks with high correlation*
 
-<figure>
-  <img src="Images/mid_ex.png">
-  <figcaption>
-    Figure 2.2 - Tkinter display for two stocks with medium correlation
-  </figcaption>
-</figure>  
+![Image](Images/mid_ex.png)
+*Figure 2.2 - Tkinter display for two stocks with medium correlation*
 
-<figure>
-  <img src="Images/black_ex.png">
-  <figcaption>
-    Figure 2.3 - Tkinter display for two stocks with low correlation
-  </figcaption>
-</figure>
+![Image](Images/black_ex.png)
+*Figure 2.3 - Tkinter display for two stocks with low correlation*
 
 ### Collecting Stock Data
 The program collects stock data through the StockData static class, using the Yahoo Finance Library (yfinance). Stock data is collected across two time periods of 1 month and 6 months, referred to as 'short-term' and 'long-term' periods respectively, with short-term data collected in 1-hour intervals and long-term data in 1-day intervals.
