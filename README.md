@@ -149,11 +149,11 @@ The Toplevel contains dropdown menus that allow the user to select two stocks to
 #### SubFrame2
 Clicking the `Show Focus Details` button in subFrame1 updates the GUI to show specific details regarding the selected stock, displayed in subFrame2 and subFrame3. SubFrame2 is responsible for visually representing the relevant data for each stock (other stock trends, relations, etc) in a digestible manner.
 
-(Image - subFrame2 animation)
+![Image](Images/subFrame2Animation.gif)
 
 The stocks are displayed along the y-axis, with their recent increase range (during the short-term time period) shown along the x-axis. Each stock is colored according to their correlation values, with a legend displayed on the left for clarity. Hovering the cursor over each stock will highlight it, showing numeric details in a window below.
 
-(Image - subFrame2 hovering details)
+![Image](Images/subFrame2HoverAnimation.gif)
 
 #### SubFrame3
 The third subFrame is updated at the same time as subFrame2, and is primarily responsible for prediction results. The current price of the stock is displayed above, with the rest of subFrame3 divided based on short-term and long-term results. For each portion, the subFrame graphs the stock behavior on a Canvas, with specific details below displaying the most recent increase (in USD and %), whether that change was significant (changeImportance), the calculated trend prediction, and a list of the stocks that accounted towards that prediction.
